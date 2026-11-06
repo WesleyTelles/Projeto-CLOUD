@@ -62,7 +62,7 @@ function createApp({ iniciadoEm = new Date().toISOString() } = {}) {
   // Rota oficial do enunciado (/tarefas) e alias /api/tarefas usado pela interface.
   app.use(['/tarefas', '/api/tarefas'], tarefas);
   app.use('/api', (req, res) => res.status(404).json({ erro: 'Rota não encontrada.' }));
-  app.use(express.static(path.join(__dirname, '..', 'public')));
+  app.use(express.static(path.join(__dirname, '..', '..', 'frontend')));
   app.use(tratarErros);
   return app;
 }

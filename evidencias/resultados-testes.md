@@ -1,8 +1,8 @@
 # Resultados dos testes automatizados (DEV)
 
-Execução: `npm test` (node:test) contra PostgreSQL real, schema `banco/schema.sql` aplicado, fuso de referência `America/Recife`, em 06/11/2026.
+Execução: `npm test` (node:test) contra PostgreSQL real, schema `backend/banco/schema.sql` aplicado, fuso de referência `America/Recife`, em 06/11/2026.
 
-Resultado obtido: **36 testes, 36 aprovados, 0 falhas** (`testes/api.test.js`, `testes/validacao.test.js`, `testes/indisponibilidade.test.js`).
+Resultado obtido: **36 testes, 36 aprovados, 0 falhas** (`backend/testes/api.test.js`, `backend/testes/validacao.test.js`, `backend/testes/indisponibilidade.test.js`).
 
 | Caso | Esperado | Obtido |
 |---|---|---|

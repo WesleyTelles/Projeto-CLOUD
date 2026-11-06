@@ -19,11 +19,11 @@ Comece por aqui: o banco leva de 5 a 15 minutos. Versão 16, camada Burstable B1
 Depois que o servidor estiver pronto, crie o banco `mural` e aplique os scripts (Cloud Shell com `psql`, ou da sua máquina com o IP liberado):
 
 ```bash
-psql "host=SERVIDOR.postgres.database.azure.com port=5432 dbname=mural user=USUARIO sslmode=require" -f banco/schema.sql
-psql "host=SERVIDOR.postgres.database.azure.com port=5432 dbname=mural user=USUARIO sslmode=require" -f banco/dados-iniciais.sql
+psql "host=SERVIDOR.postgres.database.azure.com port=5432 dbname=mural user=USUARIO sslmode=require" -f backend/banco/schema.sql
+psql "host=SERVIDOR.postgres.database.azure.com port=5432 dbname=mural user=USUARIO sslmode=require" -f backend/banco/dados-iniciais.sql
 ```
 
-Opcional (segurança): rode `banco/usuario-app.sql` e use o usuário `app_mural` na aplicação.
+Opcional (segurança): rode `backend/banco/usuario-app.sql` e use o usuário `app_mural` na aplicação.
 
 String de conexão:
 
@@ -53,7 +53,7 @@ az webapp config appsettings set --name app-cloud-gXX-ab --resource-group rg-clo
   --settings DATABASE_URL="postgres://..." DB_SSL="true"
 ```
 
-A Azure injeta a variável `PORT`; a aplicação já lê `process.env.PORT`. O script `start` do `package.json` é `node src/server.js`.
+A Azure injeta a variável `PORT`; a aplicação já lê `process.env.PORT`. O backend fica na pasta `backend/` e o `start` é `node src/server.js`; no App Service use o comando de inicialização `cd backend && npm start` (a aplicação também serve a pasta `frontend/`).
 
 ## 5. Publicar
 

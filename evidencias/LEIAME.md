@@ -13,7 +13,7 @@ Todos os prints precisam mostrar **data e hora visíveis**. Salve nesta pasta co
 
 ## Evidências específicas do Desafio 01
 
-- Print do filtro **"atrasadas"** demonstrando o CA4 (uma pendente e uma concluída com prazo de ontem; só a pendente aparece). Arquivo: `CA4-atrasadas.png`. Preparação documentada em `banco/preparar-teste-ca4.sql`.
+- Print do filtro **"atrasadas"** demonstrando o CA4 (uma pendente e uma concluída com prazo de ontem; só a pendente aparece). Arquivo: `CA4-atrasadas.png`. Preparação documentada em `backend/banco/preparar-teste-ca4.sql`.
 - Registro do teste do CA3 (**409** ao concluir de novo). Arquivo: `CA3-409.png`.
 
 ## Roteiro da prova de persistência
@@ -23,5 +23,5 @@ Todos os prints precisam mostrar **data e hora visíveis**. Salve nesta pasta co
 3. Anotar `iniciado_em` de `/health`: **Print 2**.
 4. Reiniciar a aplicação (botão **Reiniciar** no portal ou `az webapp restart`; nos níveis B e C, parar e iniciar o processo).
 5. Conferir que `iniciado_em` mudou e o registro continua listado: **Print 3**.
-6. Mostrar a mesma linha numa consulta direta ao banco (`banco/prova-persistencia.sql`): **Print 4**.
+6. Mostrar a mesma linha numa consulta direta ao banco (`backend/banco/prova-persistencia.sql`): **Print 4**.
 7. Nível A: o professor cadastra `PROF-HHMM`; mostrar na apresentação.

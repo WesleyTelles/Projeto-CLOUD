@@ -82,7 +82,9 @@ Projeto acadêmico desenvolvido em equipe, com divisão de responsabilidades ent
 
 ## 8. Documentação Técnica da Parte DEV
 
-**Stack:** Node.js 20+, Express 4, `pg` (PostgreSQL), HTML/JS sem framework em `public/`.
+**Estrutura:** `backend/` (API Express, SQL do banco, testes, `requests.http`) e `frontend/` (interface web, servida pelo próprio backend). Documentação em `docs/` e evidências em `evidencias/`.
+
+**Stack:** Node.js 20+, Express 4, `pg` (PostgreSQL), HTML/JS sem framework em `frontend/`.
 
 **Endpoints** (alias `/api/tarefas` usado pela interface):
 
@@ -102,6 +104,7 @@ Projeto acadêmico desenvolvido em equipe, com divisão de responsabilidades ent
 
 **Como executar:**
 ```bash
+cd backend
 npm install
 cp .env.example .env   # preencha DATABASE_URL (e DB_SSL)
 npm run db:schema
@@ -109,7 +112,7 @@ npm start
 ```
 **Testes:** `npm test` (exige `DATABASE_URL` com o schema aplicado). Resultado registrado em `evidencias/resultados-testes.md`.
 
-**Preparação do CA4:** `banco/preparar-teste-ca4.sql` (feita direto no banco, pois a API recusa prazo passado).
+**Preparação do CA4:** `backend/banco/preparar-teste-ca4.sql` (feita direto no banco, pois a API recusa prazo passado).
 
 **Limitações conhecidas:** sem autenticação; não validado no Azure; `/reabrir`, `/contadores` e filtro por responsável são extras além do escopo.
 

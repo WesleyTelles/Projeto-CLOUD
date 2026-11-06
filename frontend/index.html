@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Mural da Coordenação</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f4ed8'/%3E%3Cpath d='M10 9h12v9l-6 6-6-6z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg:#f4f5f9; --surface:#ffffff; --surface-2:#f8f9fc; --txt:#161a2b; --mut:#5d6580; --line:#e2e5ef;
+    --brand:#1f4ed8; --brand-soft:#e8eeff; --on-brand:#fff;
+    --late:#c42b2b; --late-soft:#fdecec; --ok:#15803d; --ok-soft:#e6f5ec; --warn:#b45309; --warn-soft:#fdf1e1;
+    --p-alta:#c42b2b; --p-media:#b45309; --p-baixa:#2563a8;
+    --shadow:0 1px 2px rgba(22,26,43,.06), 0 4px 14px rgba(22,26,43,.05);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0e1120; --surface:#171b2e; --surface-2:#1d2238; --txt:#eceff9; --mut:#9aa3c2; --line:#2a3050;
+      --brand:#7c9cff; --brand-soft:#232b52; --on-brand:#0e1120;
+      --late:#ff8b8b; --late-soft:#3a1d27; --ok:#5fd493; --ok-soft:#173326; --warn:#f3b565; --warn-soft:#38291a;
+      --p-alta:#ff8b8b; --p-media:#f3b565; --p-baixa:#8fb8f0;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.25);
+    }
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+         font:15px/1.5 Inter, "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+  button, input, select { font:inherit; color:inherit; }
+  button { cursor:pointer; }
+  :focus-visible { outline:3px solid var(--brand); outline-offset:2px; border-radius:6px; }
+  [hidden] { display:none !important; }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+  .wrap { max-width:1180px; margin:0 auto; padding:20px 20px 64px; }
+
+  /* Cabeçalho */
+  .topo { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .marca { display:flex; align-items:center; gap:12px; }
+  .logo { width:42px; height:42px; border-radius:12px; background:var(--brand); display:grid; place-items:center; flex:none; }
+  .logo svg { width:22px; height:22px; fill:var(--on-brand); }
+  h1 { margin:0; font-size:1.35rem; letter-spacing:-.01em; line-height:1.2; }
+  .data-hoje { margin:0; color:var(--mut); font-size:.85rem; }
+  .data-hoje::first-letter { text-transform:uppercase; }
+  .saude { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px;
+           background:var(--surface); border:1px solid var(--line); font-size:.8rem; color:var(--mut); }
+  .saude i { width:9px; height:9px; border-radius:50%; background:var(--mut); }
+  .saude.ok i { background:var(--ok); } .saude.erro i { background:var(--late); }
+
+  /* Resumo / filtros */
+  .resumo { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:20px; }
+  .tile { text-align:left; background:var(--surface); border:1.5px solid var(--line); border-radius:var(--radius);
+          padding:14px 16px; box-shadow:var(--shadow); transition:transform .12s, border-color .12s; }
+  .tile:hover { transform:translateY(-2px); }
+  .tile[aria-pressed="true"] { border-color:var(--brand); background:var(--brand-soft); }
+  .tile .rot { display:block; font-size:.8rem; color:var(--mut); font-weight:600; }
+  .tile .num { display:block; font-size:2rem; font-weight:750; line-height:1.15; font-variant-numeric:tabular-nums; }
+  .tile.late .num { color:var(--late); }
+  .tile.late.tem { background:var(--late-soft); border-color:var(--late); }
+  .tile.done .num { color:var(--ok); }
+  .progresso { grid-column:1 / -1; display:flex; align-items:center; gap:12px; color:var(--mut); font-size:.82rem; }
+  .barra { flex:1; height:8px; border-radius:99px; background:var(--line); overflow:hidden; }
+  .barra b { display:block; height:100%; width:0; background:var(--ok); border-radius:99px; transition:width .5s; }
+
+  /* Nova tarefa */
+  .nova { margin-top:20px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+          padding:16px; box-shadow:var(--shadow); }
+  .linha-titulo { display:flex; gap:10px; }
+  .campo-titulo { flex:1; font-size:1.05rem; padding:12px 14px; border-radius:10px; border:1.5px solid var(--line);
+                  background:var(--surface-2); min-width:0; }
+  .campo-titulo:focus { border-color:var(--brand); outline:none; box-shadow:0 0 0 3px var(--brand-soft); }
+  .btn { border:1.5px solid var(--line); background:var(--surface); border-radius:10px; padding:10px 16px; font-weight:600;
+         transition:background .12s, transform .06s; }
+  .btn:active { transform:scale(.97); }
+  .btn.primario { background:var(--brand); border-color:var(--brand); color:var(--on-brand); }
+  .btn.primario:hover { filter:brightness(1.08); }
+  .btn.perigo { background:var(--late); border-color:var(--late); color:#fff; }
+  .btn[disabled] { opacity:.6; cursor:wait; }
+  .detalhes { display:grid; grid-template-columns:1.1fr 1.4fr 1.2fr; gap:14px; margin-top:14px; align-items:start; }
+  .grupo > label, .grupo > .rotulo { display:block; font-size:.78rem; font-weight:650; color:var(--mut); margin-bottom:6px; }
+  .grupo input[type=text], .grupo input[type=date] { width:100%; padding:9px 12px; border-radius:10px;
+          border:1.5px solid var(--line); background:var(--surface-2); }
+  .grupo input:focus { border-color:var(--brand); outline:none; box-shadow:0 0 0 3px var(--brand-soft); }
+  .atalhos { display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; }
+  .chip { border:1px solid var(--line); background:var(--surface-2); border-radius:99px; padding:3px 11px; font-size:.78rem; }
+  .chip:hover { border-color:var(--brand); color:var(--brand); }
+  .seg { display:grid; grid-template-columns:repeat(3,1fr); border:1.5px solid var(--line); border-radius:10px; overflow:hidden; }
+  .seg label { margin:0; text-align:center; padding:9px 4px; cursor:pointer; font-size:.88rem; font-weight:600;
+               color:var(--mut); background:var(--surface-2); border-left:1px solid var(--line); }
+  .seg label:first-child { border-left:0; }
+  .seg input { position:absolute; opacity:0; pointer-events:none; }
+  .seg input:checked + span { color:var(--txt); }
+  .seg label:has(input:checked) { background:var(--brand-soft); color:var(--brand); box-shadow:inset 0 -3px 0 var(--brand); }
+  .seg label:has(input:focus-visible) { outline:3px solid var(--brand); outline-offset:-3px; }
+  .dica { margin:12px 0 0; font-size:.8rem; color:var(--mut); }
+  .dica kbd { background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:0 5px; font:inherit; font-size:.76rem; }
+  .entendi { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; min-height:0; }
+  .entendi .chip { background:var(--brand-soft); border-color:transparent; color:var(--brand); }
+  .erro-campo { color:var(--late); font-size:.84rem; font-weight:600; margin-top:10px; }
+  [aria-invalid="true"] { border-color:var(--late) !important; }
+
+  /* Barra de busca */
+  .barra-lista { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:28px 0 12px; }
+  .barra-lista h2 { margin:0; font-size:1.1rem; }
+  .busca { position:relative; }
+  .busca input { padding:9px 12px 9px 34px; border-radius:10px; border:1.5px solid var(--line); background:var(--surface); width:240px; max-width:100%; }
+  .busca svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:16px; height:16px; stroke:var(--mut); fill:none; stroke-width:2; }
+
+  /* Quadro */
+  .quadro { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; align-items:start; }
+  .quadro.unico { grid-template-columns:1fr; }
+  .quadro.unico .cartoes { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); }
+  .coluna { background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius); padding:12px; min-height:140px; }
+  .coluna h3 { display:flex; align-items:center; justify-content:space-between; margin:2px 4px 12px; font-size:.9rem; }
+  .coluna h3 .n { background:var(--surface); border:1px solid var(--line); border-radius:99px; padding:0 9px; font-size:.78rem; color:var(--mut); }
+  .coluna.late h3 { color:var(--late); }
+  .coluna.done h3 { color:var(--ok); }
+  .cartoes { display:flex; flex-direction:column; gap:10px; }
+  .vazio-col { color:var(--mut); font-size:.85rem; text-align:center; padding:22px 8px; border:1.5px dashed var(--line); border-radius:12px; }
+
+  .cartao { position:relative; background:var(--surface); border:1px solid var(--line); border-radius:12px;
+            padding:12px 12px 12px 16px; box-shadow:var(--shadow); animation:entra .25s ease both; }
+  .cartao::before { content:""; position:absolute; left:0; top:10px; bottom:10px; width:5px; border-radius:0 5px 5px 0; background:var(--cor); }
+  .cartao[data-p="alta"] { --cor:var(--p-alta); } .cartao[data-p="média"] { --cor:var(--p-media); } .cartao[data-p="baixa"] { --cor:var(--p-baixa); }
+  .cartao.atrasada { border-color:var(--late); background:linear-gradient(0deg, var(--surface), var(--surface)), var(--late-soft); }
+  .cartao.feita { opacity:.85; }
+  .cartao.feita .tit { text-decoration:line-through; color:var(--mut); }
+  .cartao.saindo { animation:sai .22s ease forwards; }
+  @keyframes entra { from { opacity:0; transform:translateY(6px); } }
+  @keyframes sai { to { opacity:0; transform:scale(.96); } }
+  .cartao .linha1 { display:flex; gap:10px; align-items:flex-start; }
+  .check { flex:none; width:26px; height:26px; margin-top:1px; border-radius:50%; border:2px solid var(--mut); background:transparent;
+           display:grid; place-items:center; padding:0; transition:all .15s; }
+  .check:hover { border-color:var(--ok); background:var(--ok-soft); }
+  .check svg { width:14px; height:14px; stroke:var(--ok); fill:none; stroke-width:3; opacity:0; }
+  .check:hover svg { opacity:1; }
+  .check.marcada { background:var(--ok); border-color:var(--ok); }
+  .check.marcada svg { stroke:#fff; opacity:1; }
+  .tit { flex:1; font-weight:650; overflow-wrap:anywhere; }
+  .excluir { flex:none; border:0; background:transparent; color:var(--mut); width:30px; height:30px; border-radius:8px; display:grid; place-items:center; }
+  .excluir:hover { background:var(--late-soft); color:var(--late); }
+  .excluir svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; }
+  .meta { display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; margin:8px 0 0 36px; font-size:.8rem; color:var(--mut); }
+  .resp { display:inline-flex; align-items:center; gap:6px; color:var(--txt); font-weight:600; }
+  .av { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; font-size:.68rem; font-weight:750; color:#fff; background:hsl(var(--h) 55% 42%); }
+  .tag { padding:1px 8px; border-radius:99px; font-weight:650; font-size:.74rem; border:1px solid currentColor; }
+  .tag.p-alta { color:var(--p-alta); } .tag.p-média { color:var(--p-media); } .tag.p-baixa { color:var(--p-baixa); }
+  .prazo { font-weight:600; } .prazo.late { color:var(--late); } .prazo.hoje { color:var(--warn); } .prazo.feito { color:var(--ok); }
+  .reabrir { border:0; background:transparent; color:var(--brand); font-size:.8rem; font-weight:650; padding:0; text-decoration:underline; }
+
+  /* Estados */
+  .esqueleto { height:92px; border-radius:12px; background:linear-gradient(90deg, var(--surface) 25%, var(--line) 50%, var(--surface) 75%); background-size:200% 100%; animation:brilho 1.2s infinite; }
+  @keyframes brilho { to { background-position:-200% 0; } }
+  .aviso { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:16px; padding:12px 16px;
+           border-radius:12px; background:var(--late-soft); color:var(--late); border:1px solid var(--late); font-weight:600; }
+  .vazio-geral { text-align:center; padding:40px 16px; background:var(--surface); border:1.5px dashed var(--line); border-radius:var(--radius); }
+  .vazio-geral h3 { margin:0 0 6px; } .vazio-geral p { margin:0; color:var(--mut); }
+
+  /* Aviso rápido e diálogo */
+  .avisos { position:fixed; left:50%; bottom:20px; transform:translateX(-50%); display:flex; flex-direction:column; gap:8px; z-index:20; width:min(92vw, 460px); }
+  .aviso-rapido { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-radius:12px;
+                  background:#1b2038; color:#fff; box-shadow:0 8px 28px rgba(0,0,0,.3); animation:entra .2s ease both; font-weight:600; }
+  .aviso-rapido.erro { background:var(--late); }
+  .aviso-rapido button { background:transparent; border:0; color:#9fc0ff; font-weight:750; text-decoration:underline; }
+  dialog { border:0; border-radius:16px; padding:22px; width:min(92vw, 400px); background:var(--surface); color:var(--txt); box-shadow:0 20px 60px rgba(0,0,0,.35); }
+  dialog::backdrop { background:rgba(10,12,24,.55); }
+  dialog h3 { margin:0 0 6px; } dialog p { margin:0 0 18px; color:var(--mut); overflow-wrap:anywhere; }
+  .dlg-acoes { display:flex; justify-content:flex-end; gap:10px; }
+
+  @media (max-width: 900px) {
+    .quadro { grid-template-columns:1fr; }
+    .resumo { grid-template-columns:repeat(2, 1fr); }
+    .detalhes { grid-template-columns:1fr; }
+  }
+  @media (max-width: 520px) {
+    .wrap { padding:14px 14px 80px; }
+    .linha-titulo { flex-direction:column; }
+    .busca, .busca input { width:100%; }
+    .barra-lista { align-items:stretch; }
+  }
+  /* ===== Visual claro, azul vibrante e cantos grandes ===== */
+  body { background:radial-gradient(900px 500px at 85% -10%, rgba(36,87,245,.14), transparent 60%),
+                    radial-gradient(700px 400px at -10% 20%, rgba(36,87,245,.08), transparent 60%), var(--bg); background-attachment:fixed; }
+  .btn { border-radius:999px; padding:11px 22px; }
+  .campo-titulo, .grupo input[type=text], .grupo input[type=date], .busca input { border-radius:16px; }
+  .seg { border-radius:16px; }
+  .nome { font-weight:800; font-size:1.2rem; letter-spacing:-.02em; } .nome b { color:var(--brand); }
+  .menu { display:flex; gap:6px; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:5px; box-shadow:var(--shadow); }
+  .menu a { color:var(--mut); text-decoration:none; font-weight:600; font-size:.88rem; padding:7px 16px; border-radius:999px; }
+  .menu a:hover { background:var(--brand-soft); color:var(--brand); }
+  .hero { display:grid; grid-template-columns:1.15fr 1fr; gap:32px; align-items:center; margin-top:34px; }
+  .selo { display:inline-block; background:var(--brand-soft); color:var(--brand); font-weight:700; font-size:.8rem; padding:6px 14px; border-radius:999px; }
+  .selo::first-letter { text-transform:uppercase; }
+  h1 { font-size:clamp(2rem, 4.4vw, 3.4rem); line-height:1.08; letter-spacing:-.035em; margin:16px 0 14px; font-weight:800; }
+  h1 em { font-style:normal; color:var(--brand); }
+  .ponto { position:relative; white-space:nowrap; }
+  .ponto::after { content:""; position:absolute; right:-.28em; top:.08em; width:.2em; height:.2em; border-radius:50%; background:var(--brand); }
+  .hero-txt p { color:var(--mut); font-size:1.05rem; max-width:46ch; margin:0 0 22px; }
+  .hero-acoes { display:flex; gap:12px; flex-wrap:wrap; }
+  .hero-painel { position:relative; min-height:300px; border-radius:32px; display:grid; place-items:center; overflow:hidden;
+                 background:linear-gradient(145deg, #2f63ff 0%, #1237c9 100%); box-shadow:0 24px 60px rgba(36,87,245,.35); }
+  .hero-painel::before { content:""; position:absolute; width:340px; height:340px; border-radius:50%; background:rgba(255,255,255,.1); right:-110px; top:-120px; }
+  .anel { --p:0; position:relative; width:170px; height:170px; border-radius:50%; display:grid; place-content:center; text-align:center; color:#fff;
+          background:radial-gradient(circle closest-side, #1a45d8 76%, transparent 77%), conic-gradient(#fff calc(var(--p)*1%), rgba(255,255,255,.25) 0); }
+  .anel span { font-size:2.4rem; font-weight:800; line-height:1; } .anel small { opacity:.85; font-weight:600; }
+  .flutua { position:absolute; background:#fff; color:var(--txt); border-radius:18px; padding:10px 16px; box-shadow:0 10px 28px rgba(8,20,80,.28);
+            display:flex; flex-direction:column; line-height:1.15; }
+  .flutua b { font-size:1.6rem; color:var(--brand); font-variant-numeric:tabular-nums; } .flutua span { font-size:.76rem; color:var(--mut); font-weight:600; }
+  .f1 { left:7%; top:14%; } .f2 { right:7%; top:38%; } .f2 b { color:var(--late); } .f3 { left:11%; bottom:10%; } .f3 b { color:var(--ok); }
+  #resumo { counter-reset:n; margin-top:34px; }
+  .tile { counter-increment:n; border-radius:24px; padding:20px 22px; border:1.5px solid transparent; }
+  .tile::before { content:counter(n, decimal-leading-zero); display:block; font-size:1.6rem; font-weight:800; color:var(--brand-soft); -webkit-text-stroke:1.5px var(--brand); margin-bottom:6px; }
+  .tile[aria-pressed="true"] { background:linear-gradient(145deg, #2f63ff, #1237c9); border-color:transparent; color:#fff; }
+  .tile[aria-pressed="true"] .rot { color:rgba(255,255,255,.85); } .tile[aria-pressed="true"] .num { color:#fff; }
+  .tile[aria-pressed="true"]::before { color:transparent; -webkit-text-stroke-color:rgba(255,255,255,.7); }
+  .nova, .coluna { border-radius:28px; } .nova { padding:22px; }
+  .cartao { border-radius:18px; }
+  .progresso { margin-top:4px; }
+  @media (max-width: 900px) { .hero { grid-template-columns:1fr; } .menu { display:none; } .hero-painel { min-height:260px; } }
+  @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topo">
+    <div class="marca">
+      <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h10v7l3 3v2h-7v6l-1 1-1-1v-6H4v-2l3-3z"/></svg></div>
+      <span class="nome">Mural<b>.</b>Coordenação</span>
+    </div>
+    <nav class="menu" aria-label="Seções">
+      <a href="#resumo">Resumo</a><a href="#form">Nova tarefa</a><a href="#t-quadro">Mural</a>
+    </nav>
+    <div class="saude" id="saude" role="status" aria-live="polite"><i></i><span>Verificando banco…</span></div>
+  </header>
+
+  <section class="hero" aria-labelledby="h1">
+    <div class="hero-txt">
+      <span class="selo" id="data-hoje"></span>
+      <h1 id="h1">Organize a coordenação com <em>clareza</em> e sem <span class="ponto">post-its</span></h1>
+      <p>Tarefas, responsáveis e prazos num só lugar. Veja de relance o que está atrasado e conclua com um clique.</p>
+      <div class="hero-acoes">
+        <button class="btn primario" type="button" id="hero-nova">Nova tarefa</button>
+        <button class="btn" type="button" id="hero-atrasadas">Ver atrasadas</button>
+      </div>
+    </div>
+    <div class="hero-painel" aria-label="Situação de hoje">
+      <div class="anel" id="anel" role="img" aria-label="Progresso"><span id="anel-pct">0%</span><small>concluído</small></div>
+      <div class="flutua f1"><b id="h-pend">0</b><span>pendentes</span></div>
+      <div class="flutua f2"><b id="h-late">0</b><span>atrasadas</span></div>
+      <div class="flutua f3"><b id="h-done">0</b><span>concluídas</span></div>
+    </div>
+  </section>
+
+  <div id="aviso-conexao" class="aviso" role="alert" hidden>
+    <span id="aviso-texto">Não foi possível falar com o servidor.</span>
+    <button class="btn" type="button" id="tentar">Tentar novamente</button>
+  </div>
+
+  <section class="resumo" aria-label="Resumo das tarefas" id="resumo"></section>
+
+  <form class="nova" id="form" novalidate aria-labelledby="t-nova">
+    <h2 id="t-nova" class="sr">Nova tarefa</h2>
+    <div class="linha-titulo">
+      <label class="sr" for="titulo">Título da tarefa</label>
+      <input class="campo-titulo" id="titulo" name="titulo" type="text" autocomplete="off"
+             placeholder="O que precisa ser feito? Ex.: Reservar o auditório @Ana !alta #amanha" aria-describedby="erro-form">
+      <button class="btn primario" type="submit" id="enviar">Adicionar ao mural</button>
+    </div>
+    <div class="entendi" id="entendi" aria-live="polite"></div>
+    <div class="detalhes">
+      <div class="grupo">
+        <label for="responsavel">Responsável</label>
+        <input id="responsavel" name="responsavel" type="text" autocomplete="off" placeholder="Quem cuida disso?" maxlength="100">
+      </div>
+      <div class="grupo">
+        <label for="prazo">Prazo <span style="font-weight:400">(opcional)</span></label>
+        <input id="prazo" name="prazo" type="date">
+        <div class="atalhos" aria-label="Atalhos de prazo">
+          <button type="button" class="chip" data-dias="0">Hoje</button>
+          <button type="button" class="chip" data-dias="1">Amanhã</button>
+          <button type="button" class="chip" data-dias="7">Em 7 dias</button>
+          <button type="button" class="chip" data-dias="">Sem prazo</button>
+        </div>
+      </div>
+      <div class="grupo" role="radiogroup" aria-labelledby="rot-prio">
+        <span class="rotulo" id="rot-prio">Prioridade</span>
+        <div class="seg">
+          <label><input type="radio" name="prioridade" value="baixa"><span>Baixa</span></label>
+          <label><input type="radio" name="prioridade" value="média" checked><span>Média</span></label>
+          <label><input type="radio" name="prioridade" value="alta"><span>Alta</span></label>
+        </div>
+      </div>
+    </div>
+    <p class="erro-campo" id="erro-form" role="alert" hidden></p>
+    <p class="dica">Atalhos no título: <kbd>@nome</kbd> responsável · <kbd>!alta</kbd> <kbd>!baixa</kbd> prioridade · <kbd>#hoje</kbd> <kbd>#amanha</kbd> prazo · tecla <kbd>N</kbd> foca aqui.</p>
+  </form>
+
+  <div class="barra-lista">
+    <h2 id="t-quadro">Tarefas</h2>
+    <div class="busca">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <label class="sr" for="busca">Buscar por responsável</label>
+      <input id="busca" type="search" placeholder="Buscar por responsável" autocomplete="off">
+    </div>
+  </div>
+
+  <main id="quadro" class="quadro" aria-labelledby="t-quadro" aria-live="polite" aria-busy="true"></main>
+</div>
+
+<div class="avisos" id="avisos" aria-live="polite"></div>
+
+<dialog id="dlg" aria-labelledby="dlg-t">
+  <h3 id="dlg-t">Excluir tarefa?</h3>
+  <p id="dlg-p"></p>
+  <div class="dlg-acoes">
+    <button class="btn" type="button" id="dlg-nao">Cancelar</button>
+    <button class="btn perigo" type="button" id="dlg-sim">Excluir</button>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+const TZ = 'America/Recife';
+const API = '/tarefas';
+const FILTROS = [
+  { chave: '', rotulo: 'Todas', campo: 'total' },
+  { chave: 'pendentes', rotulo: 'Pendentes', campo: 'pendentes' },
+  { chave: 'atrasadas', rotulo: 'Atrasadas', campo: 'atrasadas', cls: 'late' },
+  { chave: 'concluidas', rotulo: 'Concluídas', campo: 'concluidas', cls: 'done' },
+];
+let filtro = '';
+let contadores = null;
+let carregou = false;
+const $ = (s) => document.querySelector(s);
+
+/* ---------- utilidades ---------- */
+function h(tag, attrs, ...filhos) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const f of filhos.flat()) if (f !== null && f !== undefined) el.append(f);
+  return el;
+}
+const svg = (d, extra = '') => {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true');
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', d); s.append(p); if (extra) s.setAttribute('class', extra); return s;
+};
+
+// "Hoje" no fuso de Recife, no formato AAAA-MM-DD (o servidor usa a mesma regra).
+function hojeISO(deslocarDias = 0) {
+  const partes = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const [a, m, d] = partes.split('-').map(Number);
+  const dt = new Date(Date.UTC(a, m - 1, d + deslocarDias));
+  return dt.toISOString().slice(0, 10);
+}
+const diasEntre = (isoA, isoB) => Math.round((Date.parse(isoB) - Date.parse(isoA)) / 86400000);
+const dataCurta = (iso) => { const [, m, d] = iso.split('-'); return `${d}/${m}`; };
+const horaLocal = (iso) => new Date(iso).toLocaleString('pt-BR', { timeZone: TZ, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+function rotuloPrazo(t) {
+  if (t.situacao === 'concluida') return { texto: 'Concluída em ' + horaLocal(t.concluida_em), cls: 'feito' };
+  if (!t.prazo) return { texto: 'Sem prazo', cls: '' };
+  const dif = diasEntre(hojeISO(), t.prazo);
+  if (dif < 0) return { texto: `Venceu ${dif === -1 ? 'ontem' : 'há ' + -dif + ' dias'} (${dataCurta(t.prazo)})`, cls: 'late' };
+  if (dif === 0) return { texto: 'Vence hoje', cls: 'hoje' };
+  if (dif === 1) return { texto: 'Vence amanhã', cls: '' };
+  return { texto: `Vence em ${dif} dias (${dataCurta(t.prazo)})`, cls: '' };
+}
+const iniciais = (nome) => nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+const matiz = (nome) => [...nome].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
+
+async function chamar(metodo, url, corpo) {
+  const opc = { method: metodo, headers: {} };
+  if (corpo !== undefined) { opc.headers['Content-Type'] = 'application/json'; opc.body = JSON.stringify(corpo); }
+  let r;
+  try { r = await fetch(url, opc); }
+  catch { const e = new Error('Não foi possível falar com o servidor. Confira se ele está ligado (npm start) e abra o endereço http://localhost:3000.'); e.rede = true; throw e; }
+  const dados = await r.json().catch(() => null);
+  if (!r.ok) {
+    const e = new Error((dados && dados.erro) || 'Algo deu errado. Tente novamente.');
+    e.status = r.status; e.servidor = r.status >= 500; throw e;
+  }
+  return dados;
+}
+
+/* ---------- avisos ---------- */
+function aviso(texto, { erro = false, desfazer = null } = {}) {
+  const el = h('div', { class: 'aviso-rapido' + (erro ? ' erro' : ''), role: erro ? 'alert' : 'status' }, h('span', {}, texto));
+  const fechar = () => el.remove();
+  if (desfazer) el.append(h('button', { type: 'button', onclick: () => { fechar(); desfazer(); } }, 'Desfazer'));
+  $('#avisos').append(el);
+  setTimeout(fechar, desfazer ? 7000 : 4000);
+}
+function mostrarConexao(msg) { $('#aviso-texto').textContent = msg; $('#aviso-conexao').hidden = false; }
+
+/* ---------- resumo / filtros ---------- */
+function desenharResumo() {
+  const c = contadores || { total: 0, pendentes: 0, atrasadas: 0, concluidas: 0 };
+  const pct = c.total ? Math.round((c.concluidas / c.total) * 100) : 0;
+  $('#anel').style.setProperty('--p', pct); $('#anel-pct').textContent = pct + '%';
+  $('#anel').setAttribute('aria-label', `${pct}% das tarefas concluídas`);
+  $('#h-pend').textContent = c.pendentes; $('#h-late').textContent = c.atrasadas; $('#h-done').textContent = c.concluidas;
+  $('#resumo').replaceChildren(
+    ...FILTROS.map((f) => h('button', {
+      type: 'button', class: `tile ${f.cls || ''} ${f.chave === 'atrasadas' && c.atrasadas > 0 ? 'tem' : ''}`,
+      'aria-pressed': String(filtro === f.chave),
+      onclick: () => { filtro = f.chave; desenharResumo(); carregar(); },
+    }, h('span', { class: 'rot' }, f.rotulo), h('span', { class: 'num' }, String(c[f.campo])))),
+    h('div', { class: 'progresso' },
+      h('span', {}, `${pct}% concluído`),
+      h('div', { class: 'barra', role: 'progressbar', 'aria-valuenow': pct, 'aria-valuemin': 0, 'aria-valuemax': 100 }, h('b', { style: `width:${pct}%` })),
+      h('span', {}, `${c.concluidas} de ${c.total}`))
+  );
+}
+
+/* ---------- cartões ---------- */
+function cartao(t) {
+  const feita = t.situacao === 'concluida';
+  const pz = rotuloPrazo(t);
+  const marcar = h('button', {
+    type: 'button', class: 'check' + (feita ? ' marcada' : ''),
+    'aria-label': feita ? `Reabrir: ${t.titulo}` : `Concluir: ${t.titulo}`,
+    title: feita ? 'Reabrir' : 'Marcar como concluída',
+    onclick: (ev) => (feita ? reabrir(t) : concluir(t, ev.currentTarget.closest('.cartao'))),
+  }, svg('m5 12 5 5 9-10'));
+  return h('article', { class: 'cartao' + (t.atrasada ? ' atrasada' : '') + (feita ? ' feita' : ''), 'data-p': t.prioridade },
+    h('div', { class: 'linha1' }, marcar, h('div', { class: 'tit' }, t.titulo),
+      h('button', { type: 'button', class: 'excluir', 'aria-label': `Excluir: ${t.titulo}`, title: 'Excluir', onclick: () => confirmarExclusao(t) },
+        svg('M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3'))),
+    h('div', { class: 'meta' },
+      h('span', { class: 'resp' }, h('span', { class: 'av', style: `--h:${matiz(t.responsavel)}`, 'aria-hidden': 'true' }, iniciais(t.responsavel)), t.responsavel),
+      h('span', { class: `tag p-${t.prioridade}` }, t.prioridade === 'média' ? 'Média' : t.prioridade[0].toUpperCase() + t.prioridade.slice(1)),
+      h('span', { class: 'prazo ' + pz.cls }, (t.atrasada ? '⚠ ' : '') + pz.texto),
+      feita ? h('button', { type: 'button', class: 'reabrir', onclick: () => reabrir(t) }, 'Reabrir') : null));
+}
+
+function coluna(titulo, cls, lista, vazio) {
+  return h('section', { class: 'coluna ' + cls, 'aria-label': titulo },
+    h('h3', {}, h('span', {}, titulo), h('span', { class: 'n' }, String(lista.length))),
+    h('div', { class: 'cartoes' }, lista.length ? lista.map(cartao) : h('div', { class: 'vazio-col' }, vazio)));
+}
+
+function desenharQuadro(tarefas) {
+  const q = $('#quadro');
+  q.setAttribute('aria-busy', 'false');
+  const buscando = $('#busca').value.trim() !== '';
+  if (tarefas.length === 0 && !filtro) {
+    q.className = 'quadro unico';
+    q.replaceChildren(h('div', { class: 'vazio-geral' },
+      h('h3', {}, buscando ? 'Ninguém encontrado' : 'O mural está limpo'),
+      h('p', {}, buscando ? 'Nenhuma tarefa para esse responsável.' : 'Adicione a primeira tarefa no campo acima e ela aparece aqui.')));
+    return;
+  }
+  if (!filtro) {
+    q.className = 'quadro';
+    q.replaceChildren(
+      coluna('Atrasadas', 'late', tarefas.filter((t) => t.atrasada), 'Nada atrasado. 🎉'),
+      coluna('Pendentes', '', tarefas.filter((t) => t.situacao === 'pendente' && !t.atrasada), 'Nenhuma pendente no prazo.'),
+      coluna('Concluídas', 'done', tarefas.filter((t) => t.situacao === 'concluida'), 'Nada concluído ainda.'));
+  } else {
+    const nomes = { pendentes: 'Pendentes', atrasadas: 'Atrasadas', concluidas: 'Concluídas' };
+    q.className = 'quadro unico';
+    q.replaceChildren(coluna(nomes[filtro], filtro === 'atrasadas' ? 'late' : filtro === 'concluidas' ? 'done' : '', tarefas,
+      buscando ? 'Nenhuma tarefa para esse responsável.' : 'Nenhuma tarefa neste filtro.'));
+  }
+}
+
+function esqueleto() {
+  const q = $('#quadro'); q.setAttribute('aria-busy', 'true'); q.className = 'quadro';
+  q.replaceChildren(...[0, 1, 2].map(() => h('div', { class: 'coluna' }, h('div', { class: 'cartoes' },
+    h('div', { class: 'esqueleto' }), h('div', { class: 'esqueleto' })))));
+}
+
+/* ---------- dados ---------- */
+async function carregar() {
+  if (!carregou) esqueleto();
+  const params = new URLSearchParams();
+  if (filtro) params.set('situacao', filtro);
+  const resp = $('#busca').value.trim();
+  if (resp) params.set('responsavel', resp);
+  try {
+    const [lista, cont] = await Promise.all([chamar('GET', `${API}?${params}`), chamar('GET', `${API}/contadores`)]);
+    contadores = cont; carregou = true;
+    $('#aviso-conexao').hidden = true;
+    desenharResumo(); desenharQuadro(lista.tarefas);
+  } catch (e) {
+    $('#quadro').setAttribute('aria-busy', 'false');
+    mostrarConexao(e.rede ? e.message : 'O servidor está indisponível no momento. Tente novamente em instantes.');
+    if (!carregou) $('#quadro').replaceChildren();
+  }
+}
+
+async function concluir(t, el) {
+  try {
+    await chamar('PATCH', `${API}/${t.id}/concluir`);
+    if (el) el.classList.add('saindo');
+    aviso('Tarefa concluída.', { desfazer: () => reabrir(t, true) });
+    setTimeout(carregar, el ? 200 : 0);
+  } catch (e) { aviso(e.message, { erro: true }); carregar(); }
+}
+async function reabrir(t, silencioso) {
+  try { await chamar('PATCH', `${API}/${t.id}/reabrir`); if (!silencioso) aviso('Tarefa reaberta.'); }
+  catch (e) { aviso(e.message, { erro: true }); }
+  carregar();
+}
+function confirmarExclusao(t) {
+  $('#dlg-p').textContent = `“${t.titulo}” será removida do mural. Essa ação não pode ser desfeita.`;
+  const dlg = $('#dlg');
+  $('#dlg-sim').onclick = async () => {
+    dlg.close();
+    try { await chamar('DELETE', `${API}/${t.id}`); aviso('Tarefa excluída.'); }
+    catch (e) { aviso(e.message, { erro: true }); }
+    carregar();
+  };
+  $('#dlg-nao').onclick = () => dlg.close();
+  dlg.showModal();
+  $('#dlg-nao').focus();
+}
+
+/* ---------- formulário ---------- */
+const form = $('#form');
+const prioridadeAtual = () => form.querySelector('input[name=prioridade]:checked').value;
+
+// Atalhos digitados no título: @nome, !alta/!media/!baixa, #hoje/#amanha
+function lerAtalhos(texto) {
+  const r = { titulo: texto, responsavel: null, prioridade: null, prazo: null };
+  r.titulo = texto.replace(/(^|\s)@([\p{L}][\p{L}.'-]*)/u, (m, e, n) => { r.responsavel = n; return e; })
+    .replace(/(^|\s)!(alta|m[eé]dia|baixa)\b/iu, (m, e, p) => { const k = p.toLowerCase(); r.prioridade = k === 'media' ? 'média' : k; return e; })
+    .replace(/(^|\s)#(hoje|amanh[ãa])\b/iu, (m, e, d) => { r.prazo = hojeISO(d.toLowerCase() === 'hoje' ? 0 : 1); return e; })
+    .replace(/\s{2,}/g, ' ').trim();
+  return r;
+}
+function mostrarEntendi() {
+  const a = lerAtalhos($('#titulo').value);
+  const chips = [];
+  if (a.responsavel) chips.push('Responsável: ' + a.responsavel);
+  if (a.prioridade) chips.push('Prioridade: ' + a.prioridade);
+  if (a.prazo) chips.push('Prazo: ' + dataCurta(a.prazo));
+  $('#entendi').replaceChildren(...chips.map((c) => h('span', { class: 'chip' }, c)));
+}
+$('#titulo').addEventListener('input', mostrarEntendi);
+
+form.querySelectorAll('[data-dias]').forEach((b) => b.addEventListener('click', () => {
+  $('#prazo').value = b.dataset.dias === '' ? '' : hojeISO(Number(b.dataset.dias));
+}));
+$('#prazo').min = hojeISO();
+
+function erroForm(msg, campo) {
+  const p = $('#erro-form'); p.textContent = msg || ''; p.hidden = !msg;
+  form.querySelectorAll('[aria-invalid]').forEach((i) => i.removeAttribute('aria-invalid'));
+  if (campo) { campo.setAttribute('aria-invalid', 'true'); campo.focus(); }
+}
+
+form.addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const a = lerAtalhos($('#titulo').value);
+  const dados = {
+    titulo: a.titulo,
+    responsavel: (a.responsavel || $('#responsavel').value).trim(),
+    prioridade: a.prioridade || prioridadeAtual(),
+    prazo: a.prazo || $('#prazo').value || null,
+  };
+  // conferência rápida para o usuário; a validação oficial é a do servidor
+  if (dados.titulo.length < 3 || dados.titulo.length > 120) return erroForm('O título deve ter entre 3 e 120 caracteres.', $('#titulo'));
+  if (!dados.responsavel) return erroForm('Informe quem é o responsável (ou use @nome no título).', $('#responsavel'));
+  if (dados.prazo && dados.prazo < hojeISO()) return erroForm('O prazo não pode ser anterior a hoje.', $('#prazo'));
+  erroForm('');
+  const btn = $('#enviar'); btn.disabled = true; btn.textContent = 'Salvando…';
+  try {
+    await chamar('POST', API, dados);
+    form.reset(); $('#entendi').replaceChildren(); $('#titulo').focus();
+    aviso(`Tarefa adicionada para ${dados.responsavel}.`);
+    await carregar();
+  } catch (e) {
+    erroForm(e.message); if (e.rede || e.servidor) aviso(e.message, { erro: true });
+  } finally { btn.disabled = false; btn.textContent = 'Adicionar ao mural'; }
+});
+
+/* ---------- busca, saúde, atalhos ---------- */
+let tBusca;
+$('#busca').addEventListener('input', () => { clearTimeout(tBusca); tBusca = setTimeout(carregar, 250); });
+$('#hero-nova').addEventListener('click', () => { $('#form').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('#titulo').focus({ preventScroll: true }); });
+$('#hero-atrasadas').addEventListener('click', () => { filtro = 'atrasadas'; desenharResumo(); carregar(); $('#t-quadro').scrollIntoView({ behavior: 'smooth' }); });
+$('#tentar').addEventListener('click', () => { carregar(); saude(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
+    e.preventDefault(); $('#titulo').focus();
+  }
+});
+
+async function saude() {
+  const el = $('#saude'); const txt = el.querySelector('span');
+  try {
+    const r = await fetch('/health'); const d = await r.json();
+    el.className = 'saude ' + (r.ok ? 'ok' : 'erro');
+    txt.textContent = r.ok ? 'Banco conectado · no ar desde ' + horaLocal(d.iniciado_em) : 'Banco indisponível';
+    clearInterval(religar); religar = null;
+  } catch {
+    el.className = 'saude erro'; txt.textContent = 'Servidor fora do ar · tentando reconectar…';
+    if (!religar) religar = setInterval(() => { saude(); carregar(); }, 8000);
+  }
+}
+let religar = null;
+
+$('#data-hoje').textContent = new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+desenharResumo(); saude(); carregar();
+setInterval(() => { if (!document.hidden) { saude(); carregar(); } }, 60000);
+</script>
+</body>
+</html>

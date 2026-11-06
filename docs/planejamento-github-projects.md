@@ -18,14 +18,14 @@ Objetivo: o sistema salva e consulta tarefas num banco de dados real, e o dado s
 |---|---|---|---|
 | 1 | Criar repositório, `.gitignore` (com `.env`), `.env.example` e estrutura de pastas | NUVEM | Repositório com estrutura; `.env` ignorado |
 | 2 | Modelar a tabela `tarefas` com tipos e restrições | DADOS | Modelo no README; `CHECK`, `NOT NULL` definidos |
-| 3 | Escrever `banco/schema.sql` | DADOS | Roda sem erro duas vezes (idempotente) |
-| 4 | Escrever `banco/dados-iniciais.sql` (dados fictícios) | DADOS | Script insere tarefas de exemplo |
+| 3 | Escrever `backend/banco/schema.sql` | DADOS | Roda sem erro duas vezes (idempotente) |
+| 4 | Escrever `backend/banco/dados-iniciais.sql` (dados fictícios) | DADOS | Script insere tarefas de exemplo |
 | 5 | Criar o banco (Azure PostgreSQL ou local) e liberar firewall | NUVEM | Conexão testada com `psql` |
 | 6 | Configurar `DATABASE_URL` como variável de ambiente (local e App Service) | NUVEM | Nenhum segredo no Git |
 | 7 | Implementar conexão com o banco (`src/db.js`) e `GET /health` | DEV | `/health` 200 com banco; 503 sem banco |
 | 8 | Implementar cadastro de tarefa (RF1) com validação no servidor | DEV | `POST /api/tarefas` grava no banco; 400 em entrada inválida |
 | 9 | Implementar listagem de tarefas (RF2) | DEV | `GET /api/tarefas` lê do banco |
-| 10 | Interface mínima (formulário e lista) | DEV | `public/index.html` cadastra e lista |
+| 10 | Interface mínima (formulário e lista) | DEV | `frontend/index.html` cadastra e lista |
 | 11 | Prova de persistência: cadastrar `GXX-PALAVRA`, reiniciar, conferir | DADOS | 4 prints em `evidencias/` |
 | 12 | Casos de teste da Sprint 1 (cadastro, listagem, 400) | QA | Tabela de testes no README |
 | 13 | Arquivo `requests.http` com as requisições | QA | Requisições executam |
