@@ -1,0 +1,58 @@
+### Requisições prontas (extensão "REST Client" do VS Code).
+### Local: porta 3000. Azure: troque a base pela URL do App Service.
+@base = http://localhost:3000
+
+### Rotas oficiais: /tarefas (alias /api/tarefas usado pela interface).
+### Cada requisição traz "Esperado"; o obtido está em evidencias/resultados-testes.md.
+
+### Saúde: testa a conexão com o banco (503 se o banco cair)
+GET {{base}}/health
+
+### RF1: cadastrar tarefa (201)
+POST {{base}}/tarefas
+Content-Type: application/json
+
+{ "titulo": "G02-NIMBUS registro de persistência", "responsavel": "Ana Exemplo", "prazo": "2030-12-31", "prioridade": "alta" }
+
+### CA1: título com 2 caracteres (400)
+POST {{base}}/tarefas
+Content-Type: application/json
+
+{ "titulo": "ab", "responsavel": "Ana Exemplo" }
+
+### CA2: prazo anterior a hoje (400)
+POST {{base}}/tarefas
+Content-Type: application/json
+
+{ "titulo": "Prazo no passado", "responsavel": "Ana Exemplo", "prazo": "2020-01-01" }
+
+### RF2: listar todas
+GET {{base}}/tarefas
+
+### RF2: filtros por situação
+GET {{base}}/tarefas?situacao=pendentes
+###
+GET {{base}}/tarefas?situacao=concluidas
+### RF4 / CA4: atrasadas (prazo anterior a hoje e não concluída)
+GET {{base}}/tarefas?situacao=atrasadas
+
+### Extra: filtro por responsável
+GET {{base}}/tarefas?responsavel=ana
+
+### Extra: contadores
+GET {{base}}/tarefas/contadores
+
+### RF3 / CA3: concluir (200; repetir devolve 409). Troque o id.
+PATCH {{base}}/tarefas/1/concluir
+
+### Extra: reabrir tarefa concluída
+PATCH {{base}}/tarefas/1/reabrir
+
+### RF5: excluir (204)
+DELETE {{base}}/tarefas/1
+
+### CA5: excluir id inexistente (404)
+DELETE {{base}}/tarefas/2147483647
+
+### Situação inválida (400)
+GET {{base}}/tarefas?situacao=qualquer

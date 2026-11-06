@@ -77,3 +77,40 @@ Projeto acadêmico desenvolvido em equipe, com divisão de responsabilidades ent
 
 ---
 **Mural da Coordenação** | Projeto acadêmico
+
+---
+
+## 8. Documentação Técnica da Parte DEV
+
+**Stack:** Node.js 20+, Express 4, `pg` (PostgreSQL), HTML/JS sem framework em `public/`.
+
+**Endpoints** (alias `/api/tarefas` usado pela interface):
+
+| Método | Rota | Resposta |
+|---|---|---|
+| POST | `/tarefas` | 201, ou 400 se inválido |
+| GET | `/tarefas?situacao=pendentes\|concluidas\|atrasadas` | 200, ou 400 se filtro inválido |
+| PATCH | `/tarefas/:id/concluir` | 200, 404 ou 409 (já concluída) |
+| DELETE | `/tarefas/:id` | 200 ou 404 |
+| GET | `/health` | 200 ou 503 (banco indisponível), com `iniciado_em` |
+
+**Fuso e "hoje":** o "hoje" é calculado no PostgreSQL com `(now() AT TIME ZONE 'America/Recife')::date`, tanto na validação do prazo quanto no filtro de atrasadas, pois o App Service roda em UTC. Datas de conclusão e criação são `timestamptz`.
+
+**Exclusão:** física (`DELETE`), pela simplicidade e pelo escopo da atividade.
+
+**Conclusão atômica:** `UPDATE ... WHERE id = $1 AND concluida_em IS NULL`; só uma conclusão simultânea tem sucesso, as demais recebem 409.
+
+**Como executar:**
+```bash
+npm install
+cp .env.example .env   # preencha DATABASE_URL (e DB_SSL)
+npm run db:schema
+npm start
+```
+**Testes:** `npm test` (exige `DATABASE_URL` com o schema aplicado). Resultado registrado em `evidencias/resultados-testes.md`.
+
+**Preparação do CA4:** `banco/preparar-teste-ca4.sql` (feita direto no banco, pois a API recusa prazo passado).
+
+**Limitações conhecidas:** sem autenticação; não validado no Azure; `/reabrir`, `/contadores` e filtro por responsável são extras além do escopo.
+
+**Dependências de outras frentes:** DADOS (schema, usuário `app_mural`, banco gerenciado) e NUVEM (App Service, `DATABASE_URL`, `DB_SSL`).
