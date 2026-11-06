@@ -39,6 +39,8 @@ function createApp({ iniciadoEm = new Date().toISOString() } = {}) {
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.set('X-Content-Type-Options', 'nosniff');
+    res.set('X-Frame-Options', 'DENY');
+    res.set('Referrer-Policy', 'no-referrer');
     next();
   });
   app.use(express.json({ limit: '10kb' }));

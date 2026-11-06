@@ -69,7 +69,22 @@ Responsável pela frente de qualidade, contemplando a validação dos requisitos
 
 ## 6. Tecnologias e Arquitetura
 
-As tecnologias, os serviços de infraestrutura e os componentes utilizados serão documentados de acordo com a implementação efetivamente adotada pelo grupo.
+```
+Navegador (frontend/index.html)
+        │  HTTP/JSON  (/tarefas, /health)
+        ▼
+App Service (Node.js + Express, pasta backend/)
+        │  SQL parametrizado, DATABASE_URL (SSL)
+        ▼
+PostgreSQL gerenciado (tabela tarefas)
+```
+
+| Camada | Tecnologia | Observação |
+|---|---|---|
+| Interface | HTML, CSS e JavaScript puros | Servida pelo próprio backend (pasta `frontend/`), tema claro/escuro, responsiva |
+| API | Node.js 20+ e Express 4 | Validação no servidor e tratamento de erros sem detalhes internos |
+| Banco | PostgreSQL (`pg`) | Conexão somente por `DATABASE_URL`; restrições `CHECK` no schema |
+| Hospedagem | Azure App Service | Configuração feita pela frente de Nuvem (a confirmar) |
 
 ## 7. Contexto do Projeto
 
@@ -82,38 +97,69 @@ Projeto acadêmico desenvolvido em equipe, com divisão de responsabilidades ent
 
 ## 8. Documentação Técnica da Parte DEV
 
-**Estrutura:** `backend/` (API Express, SQL do banco, testes, `requests.http`) e `frontend/` (interface web, servida pelo próprio backend). Documentação em `docs/` e evidências em `evidencias/`.
+**Problema resolvido:** as tarefas da coordenação ficavam em post-its e grupos de mensagem, sem responsável claro nem controle de prazo. O Mural centraliza tudo e mostra de imediato o que está atrasado.
 
-**Stack:** Node.js 20+, Express 4, `pg` (PostgreSQL), HTML/JS sem framework em `frontend/`.
+**Estrutura do repositório:** `backend/` (API Express, SQL do banco, scripts, testes e `requests.http`), `frontend/` (interface web, servida pelo backend), `docs/` e `evidencias/`.
 
-**Endpoints** (alias `/api/tarefas` usado pela interface):
+### Modelo de dados (tabela `tarefas`)
 
-| Método | Rota | Resposta |
+| Coluna | Tipo | Regra |
 |---|---|---|
-| POST | `/tarefas` | 201, ou 400 se inválido |
-| GET | `/tarefas?situacao=pendentes\|concluidas\|atrasadas` | 200, ou 400 se filtro inválido |
-| PATCH | `/tarefas/:id/concluir` | 200, 404 ou 409 (já concluída) |
-| DELETE | `/tarefas/:id` | 200 ou 404 |
-| GET | `/health` | 200 ou 503 (banco indisponível), com `iniciado_em` |
+| `id` | SERIAL, chave primária | identificador único |
+| `titulo` | VARCHAR(120), obrigatório | de 3 a 120 caracteres (após `trim`) |
+| `responsavel` | VARCHAR(100), obrigatório | não pode ser vazio |
+| `prioridade` | VARCHAR(5), padrão `média` | `baixa`, `média` ou `alta` |
+| `prazo` | DATE, opcional | não pode ser anterior a hoje no cadastro |
+| `concluida_em` | TIMESTAMPTZ, opcional | preenchida ao concluir |
+| `criada_em` | TIMESTAMPTZ, padrão `now()` | data de criação |
 
-**Fuso e "hoje":** o "hoje" é calculado no PostgreSQL com `(now() AT TIME ZONE 'America/Recife')::date`, tanto na validação do prazo quanto no filtro de atrasadas, pois o App Service roda em UTC. Datas de conclusão e criação são `timestamptz`.
+A situação (pendente/concluída) e o atraso não são colunas: derivam de `concluida_em` e `prazo`.
 
-**Exclusão:** física (`DELETE`), pela simplicidade e pelo escopo da atividade.
+### Regras de negócio
+- **Cadastro:** título de 3 a 120 caracteres, responsável obrigatório, prioridade padrão média, prazo opcional e nunca anterior a hoje.
+- **Conclusão:** `PATCH /tarefas/:id/concluir` grava `concluida_em` com a data e hora reais, de forma atômica (`UPDATE ... WHERE concluida_em IS NULL`). Concluir de novo retorna 409.
+- **Atrasada:** prazo anterior a hoje e `concluida_em` vazio. Tarefa concluída nunca aparece em "atrasadas".
+- **"Hoje":** calculado no PostgreSQL com `(now() AT TIME ZONE 'America/Recife')::date`, na validação do prazo e no filtro de atrasadas, pois o App Service roda em UTC.
+- **Exclusão:** física (`DELETE`), pela simplicidade e pelo escopo da atividade. ID inexistente retorna 404.
 
-**Conclusão atômica:** `UPDATE ... WHERE id = $1 AND concluida_em IS NULL`; só uma conclusão simultânea tem sucesso, as demais recebem 409.
+### Endpoints
+A interface usa o alias `/api/tarefas`; as rotas oficiais são as abaixo.
 
-**Como executar:**
+| Método | Rota | Respostas |
+|---|---|---|
+| POST | `/tarefas` | 201 criada; 400 dados inválidos |
+| GET | `/tarefas?situacao=pendentes\|concluidas\|atrasadas` | 200; 400 filtro inválido |
+| PATCH | `/tarefas/:id/concluir` | 200; 404 inexistente; 409 já concluída |
+| DELETE | `/tarefas/:id` | 200; 404 inexistente |
+| GET | `/health` | 200 com `iniciado_em`; 503 se o banco estiver indisponível |
+
+Erros em JSON (`{"erro": "..."}`), sem SQL, credenciais ou stack trace. Requisições prontas em `backend/requests.http`.
+
+### Como executar localmente
 ```bash
 cd backend
 npm install
-cp .env.example .env   # preencha DATABASE_URL (e DB_SSL)
+cp .env.example .env   # edite e preencha DATABASE_URL (e DB_SSL)
 npm run db:schema
-npm start
+npm start              # abra http://localhost:3000
 ```
-**Testes:** `npm test` (exige `DATABASE_URL` com o schema aplicado). Resultado registrado em `evidencias/resultados-testes.md`.
 
-**Preparação do CA4:** `backend/banco/preparar-teste-ca4.sql` (feita direto no banco, pois a API recusa prazo passado).
+### Como configurar a DATABASE_URL
+Formato: `postgres://USUARIO:SENHA@SERVIDOR:5432/BANCO`. Caracteres especiais na senha precisam ser codificados (`@` vira `%40`). Use `DB_SSL=true` no Azure e deixe vazio em banco local. O arquivo `.env` está no `.gitignore`; só o `.env.example` (sem credenciais reais) é versionado. Na nuvem, as variáveis ficam nas configurações do App Service.
 
-**Limitações conhecidas:** sem autenticação; não validado no Azure; `/reabrir`, `/contadores` e filtro por responsável são extras além do escopo.
+### Testes executados
+`npm test` (dentro de `backend/`): 36 testes aprovados em PostgreSQL real, cobrindo cadastro válido e inválido, limites do título, prioridade inválida, prazo anterior a hoje, filtros, conclusão (inclusive duplicada e simultânea), exclusão, `/health` e falha de conexão (503). Detalhes em `evidencias/resultados-testes.md`. A preparação do CA4 está em `backend/banco/preparar-teste-ca4.sql`.
 
-**Dependências de outras frentes:** DADOS (schema, usuário `app_mural`, banco gerenciado) e NUVEM (App Service, `DATABASE_URL`, `DB_SSL`).
+### Limitações conhecidas
+- Sem autenticação nem perfis de usuário.
+- Ainda não validado no Azure App Service nem no banco gerenciado.
+- Testes automatizados exigem um PostgreSQL acessível via `DATABASE_URL`.
+- Extras além do enunciado: reabrir tarefa, contadores do painel e busca por responsável.
+
+### Próximos passos
+Publicar no App Service, rodar os critérios CA1 a CA5 no ambiente real, registrar as evidências (prova de persistência após reinício e prints) e gravar o pitch.
+
+### Dependências de outras frentes
+- **Dados:** criar o banco `mural`, rodar `schema.sql` e criar o usuário `app_mural`.
+- **Nuvem:** App Service, variáveis `DATABASE_URL` e `DB_SSL`, comando de inicialização `cd backend && npm start` e acesso do app ao banco.
+- **QA:** execução dos critérios de aceitação no ambiente real.
