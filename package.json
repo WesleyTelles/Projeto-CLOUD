@@ -1,0 +1,20 @@
+{
+  "name": "gxx-mural-da-coordenacao",
+  "version": "1.0.0",
+  "description": "Mural da Coordenação: tarefas com responsável, prazo e filtro de atrasadas. Cloud Challenge SENAC 2026.2.",
+  "main": "src/server.js",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "db:schema": "node scripts/aplicar-sql.js banco/schema.sql",
+    "db:seed": "node scripts/aplicar-sql.js banco/dados-iniciais.sql"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.11.5"
+  }
+}
