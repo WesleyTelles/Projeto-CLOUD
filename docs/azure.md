@@ -1,26 +1,26 @@
 # Passo a passo na Azure (Nível A)
 
-Use somente a assinatura indicada pelo professor. Todo recurso criado gera responsabilidade de custo e de exclusão. Não crie máquina virtual nem plano pago sem autorização. Substitua `gXX` pelo número do grupo (ex.: `g02`) e `ab` pelas suas iniciais.
+Use somente a assinatura indicada pelo professor. Todo recurso criado gera responsabilidade de custo e de exclusão. Não crie máquina virtual nem plano pago sem autorização. Grupo: `g01` | Responsável: `AFFelipe` (`ff`).
 
 ## 1. Grupo de recursos
 
-Portal, Grupos de recursos, Criar. Nome `rg-cloud-gXX`, região permitida pela assinatura, marcas `aula = cloud-challenge` e `grupo = gXX`.
+Portal, Grupos de recursos, Criar. Nome `rg-cloud-g01`, região permitida pela assinatura (`Canada Central`), marcas `aula = cloud-challenge` e `grupo = g01`.
 
 ```bash
-az group create --name rg-cloud-gXX --location brazilsouth --tags aula=cloud-challenge grupo=gXX
+az group create --name rg-cloud-g01 --location canadacentral --tags aula=cloud-challenge grupo=g01
 ```
 
 Erro de política ao criar recurso: a região não é permitida; recrie numa região listada na mensagem.
 
 ## 2. Banco: Azure Database for PostgreSQL, Servidor Flexível
 
-Comece por aqui: o banco leva de 5 a 15 minutos. Versão 16, camada Burstable B1ms, 32 GiB, acesso público, **permitir serviços do Azure** e **adicionar o IP atual**. Anote servidor, usuário, senha e banco.
+Comece por aqui: o banco leva de 5 a 15 minutos. Versão 18.6, camada Burstable B1ms, 32 GiB, acesso público, **permitir serviços do Azure** e **adicionar o IP atual**. Anote servidor (`db-cloud-g01`), usuário (`AFFelipe`), senha e banco (`mural`).
 
 Depois que o servidor estiver pronto, crie o banco `mural` e aplique os scripts (Cloud Shell com `psql`, ou da sua máquina com o IP liberado):
 
 ```bash
-psql "host=SERVIDOR.postgres.database.azure.com port=5432 dbname=mural user=USUARIO sslmode=require" -f backend/banco/schema.sql
-psql "host=SERVIDOR.postgres.database.azure.com port=5432 dbname=mural user=USUARIO sslmode=require" -f backend/banco/dados-iniciais.sql
+psql "host=db-cloud-g01.postgres.database.azure.com port=5432 dbname=mural user=AFFelipe sslmode=require" -f backend/banco/schema.sql
+psql "host=db-cloud-g01.postgres.database.azure.com port=5432 dbname=mural user=AFFelipe sslmode=require" -f backend/banco/dados-iniciais.sql
 ```
 
 Opcional (segurança): rode `backend/banco/usuario-app.sql` e use o usuário `app_mural` na aplicação.
@@ -28,14 +28,14 @@ Opcional (segurança): rode `backend/banco/usuario-app.sql` e use o usuário `ap
 String de conexão:
 
 ```
-postgres://USUARIO:SENHA@SERVIDOR.postgres.database.azure.com:5432/mural
+postgres://app_mural:SUA_SENHA@db-cloud-g01.postgres.database.azure.com:5432/mural?sslmode=require
 ```
 
 Senha com caractere especial deve ser codificada na URL (`@` vira `%40`).
 
 ## 3. App Service
 
-Portal, Criar um recurso, Aplicativo Web. Publicar: **Código**. Pilha: **Node 20 LTS**. SO: **Linux**. Plano: **Gratuito F1**. Nome: `app-cloud-gXX-ab` (global e único).
+Portal, Criar um recurso, Aplicativo Web. Publicar: **Código**. Pilha: **Node 20 LTS**. SO: **Linux**. Plano: **Gratuito F1**. Nome: `Mural-da-coordenacao` (global e único).
 
 ## 4. Ligar o App Service ao banco
 
@@ -43,14 +43,14 @@ Configurações, Variáveis de ambiente, Configurações de aplicativo. Adicione
 
 | Nome | Valor |
 |---|---|
-| `DATABASE_URL` | a string de conexão |
+| `DATABASE_URL` | `postgres://app_mural:SUA_SENHA@db-cloud-g01.postgres.database.azure.com:5432/mural?sslmode=require` |
 | `DB_SSL` | `true` |
 
 Aplique e confirme (a aplicação reinicia). Pela CLI:
 
 ```bash
-az webapp config appsettings set --name app-cloud-gXX-ab --resource-group rg-cloud-gXX \
-  --settings DATABASE_URL="postgres://..." DB_SSL="true"
+az webapp config appsettings set --name Mural-da-coordenacao --resource-group rg-cloud-g01 \
+  --settings DATABASE_URL="postgres://app_mural:SUA_SENHA@db-cloud-g01.postgres.database.azure.com:5432/mural?sslmode=require" DB_SSL="true"
 ```
 
 A Azure injeta a variável `PORT`; a aplicação já lê `process.env.PORT`. O backend fica na pasta `backend/` e o `start` é `node src/server.js`; no App Service use o comando de inicialização `cd backend && npm start` (a aplicação também serve a pasta `frontend/`).
@@ -61,10 +61,10 @@ Escolha uma opção: extensão Azure App Service do VS Code (Deploy to Web App),
 
 ```bash
 az login
-az webapp up --name app-cloud-gXX-ab --resource-group rg-cloud-gXX \
-  --plan plan-cloud-gXX --sku F1 --runtime "NODE:20-lts" --location brazilsouth
-az webapp restart --name app-cloud-gXX-ab --resource-group rg-cloud-gXX
-az webapp log tail --name app-cloud-gXX-ab --resource-group rg-cloud-gXX
+az webapp up --name Mural-da-coordenacao --resource-group rg-cloud-g01 \
+  --plan plan-cloud-g01 --sku F1 --runtime "NODE:20-lts" --location canadacentral
+az webapp restart --name Mural-da-coordenacao --resource-group rg-cloud-g01
+az webapp log tail --name Mural-da-coordenacao --resource-group rg-cloud-g01
 ```
 
 Confira o nome do runtime com `az webapp list-runtimes --os linux`. No Linux, maiúsculas e minúsculas nos nomes de arquivo importam.
@@ -75,8 +75,8 @@ Monitoramento, Logs do Serviço de Aplicativo, Log de aplicativo: **Sistema de a
 
 ## 7. Verificar
 
-1. Abra `https://app-cloud-gXX-ab.azurewebsites.net/health`. Esperado: `status: ok`, `banco: conectado`. Esse é o **E1** (registre a URL pública).
-2. Abra a raiz da URL e cadastre `GXX-PALAVRA` (palavra do dia do professor).
+1. Abra `https://mural-da-coordenacao.azurewebsites.net/health`. Esperado: `status: ok`, `banco: conectado`. Esse é o **E1** (registre a URL pública).
+2. Abra a raiz da URL e cadastre `G01-PALAVRA` (palavra do dia do professor).
 3. Reinicie (Portal, botão **Reiniciar**, ou `az webapp restart`). Confira que `iniciado_em` mudou e o registro continua.
 
 ## 8. Problemas comuns
@@ -98,6 +98,6 @@ Regra dos 15 minutos: bloqueado por infraestrutura há 15 minutos, desça de ní
 Antes de sair, **pare o servidor PostgreSQL** (Parar). Na data informada pelo professor, **exclua o grupo de recursos inteiro**:
 
 ```bash
-az postgres flexible-server stop --name SERVIDOR --resource-group rg-cloud-gXX
-az group delete --name rg-cloud-gXX --yes --no-wait   # só na data do professor
+az postgres flexible-server stop --name db-cloud-g01 --resource-group rg-cloud-g01
+az group delete --name rg-cloud-g01 --yes --no-wait   # só na data do professor
 ```
