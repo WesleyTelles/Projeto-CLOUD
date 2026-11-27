@@ -1,4 +1,4 @@
-# Mural da Coordenação #
+# Mural da Coordenação 
 
 Sistema de gerenciamento e acompanhamento de tarefas destinado à organização das atividades da coordenação, com foco no controle de prazos, no registro de conclusões e na identificação de pendências atrasadas.
 
