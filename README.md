@@ -151,8 +151,6 @@ Formato: `postgres://USUARIO:SENHA@SERVIDOR:5432/BANCO`. Caracteres especiais na
 `npm test` (dentro de `backend/`): 36 testes aprovados em PostgreSQL real, cobrindo cadastro válido e inválido, limites do título, prioridade inválida, prazo anterior a hoje, filtros, conclusão (inclusive duplicada e simultânea), exclusão, `/health` e falha de conexão (503). Detalhes em `evidencias/resultados-testes.md`. A preparação do CA4 está em `backend/banco/preparar-teste-ca4.sql`.
 
 ### Limitações conhecidas
-- Sem autenticação nem perfis de usuário.
-- Ainda não validado no Azure App Service nem no banco gerenciado.
 - Testes automatizados exigem um PostgreSQL acessível via `DATABASE_URL`.
 - Extras além do enunciado: reabrir tarefa, contadores do painel e busca por responsável.
 
