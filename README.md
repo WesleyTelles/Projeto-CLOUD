@@ -84,7 +84,7 @@ PostgreSQL gerenciado (tabela tarefas)
 | Interface | HTML, CSS e JavaScript puros | Servida pelo próprio backend (pasta `frontend/`), tema claro/escuro, responsiva |
 | API | Node.js 20+ e Express 4 | Validação no servidor e tratamento de erros sem detalhes internos |
 | Banco | PostgreSQL (`pg`) | Conexão somente por `DATABASE_URL`; restrições `CHECK` no schema |
-| Hospedagem | Azure App Service | Configuração feita pela frente de Nuvem (a confirmar) |
+| Hospedagem | Azure App Service | Configuração feita pela frente de Nuvem 
 
 ## 7. Contexto do Projeto
 
