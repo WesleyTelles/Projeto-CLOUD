@@ -69,14 +69,14 @@ Responsável pela frente de qualidade, contemplando a validação dos requisitos
 
 ## 6. Tecnologias e Arquitetura
 
-```
-Navegador (frontend/index.html)
-        │  HTTP/JSON  (/tarefas, /health)
-        ▼
-App Service (Node.js + Express, pasta backend/)
-        │  SQL parametrizado, DATABASE_URL (SSL)
-        ▼
-PostgreSQL gerenciado (tabela tarefas)
+```mermaid
+flowchart TD
+    N["Navegador<br/>frontend/index.html"]
+    A["Azure App Service<br/>Node.js + Express (backend/)"]
+    B[("PostgreSQL gerenciado<br/>tabela tarefas")]
+
+    N -- "HTTP/JSON<br/>/tarefas, /health" --> A
+    A -- "SQL parametrizado<br/>DATABASE_URL (SSL)" --> B
 ```
 
 | Camada | Tecnologia | Observação |
