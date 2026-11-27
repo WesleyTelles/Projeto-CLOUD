@@ -156,6 +156,9 @@ Formato: `postgres://USUARIO:SENHA@SERVIDOR:5432/BANCO`. Caracteres especiais na
 
 ### Próximos passos
 Publicar no App Service, rodar os critérios CA1 a CA5 no ambiente real, registrar as evidências (prova de persistência após reinício e prints) e gravar o pitch.
+#Link Azure :
+mural-da-coordenacao-eac6dmdqaegzasa3.mexicocentral-01.azurewebsites.net
+
 
 ### Dependências de outras frentes
 - **Dados:** criar o banco `mural`, rodar `schema.sql` e criar o usuário `app_mural`.
